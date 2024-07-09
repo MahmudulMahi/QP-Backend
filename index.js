@@ -30,6 +30,33 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    const qpMainCollection = client.db("qpServer").collection('qpmain')
+    const userCollection = client.db("qpServer").collection('users')
+
+    app.get('/qpmain',async(req,res)=>{
+      const result=await qpMainCollection.find().toArray()
+      res.send(result)
+    })
+  //  registration
+    app.post('/api/signup', async (req, res) => {
+      const { first_name, last_name, email, phone, password, user_role, gender, day, month, year } = req.body;
+      const birthDate = new Date(`${year}-${month}-${day}`);
+      const newUser = {
+        firstName: first_name,
+        lastName: last_name,
+        email,
+        phone,
+        password,
+        userRole: user_role,
+        gender,
+        birthDate,
+      };
+    console.log(newUser);
+ 
+      const result = await userCollection.insertOne(newUser);
+      res.send(result)
+    });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
