@@ -34,6 +34,7 @@ async function run() {
 
     const qpMainCollection = client.db("qpServer").collection('qpmain')
     const userCollection = client.db("qpServer").collection('users')
+    const postCollection = client.db("qpServer").collection('post')
 
     app.get('/qpmain', async (req, res) => {
       const result = await qpMainCollection.find().toArray()
@@ -83,7 +84,21 @@ async function run() {
       const result = await userCollection.insertOne(newUser);
       res.send(result)
     });
+  
 
+    app.get('/api/save-post',  async (req, res) => {
+     
+      // console.log(req.query);
+
+
+      // let query = {}; //get all bookings
+      // if (req.query?.email) {
+      //   query = {email:req.query.email};
+      // }
+
+      const result = await postCollection.find().toArray();
+      res.send(result);
+    });
    
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
