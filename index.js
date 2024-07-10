@@ -1,6 +1,7 @@
 const express = require('express')
-const cors=require('cors')
+const cors = require('cors')
 require('dotenv').config()
+var jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const app = express()
 const port = process.env.Port || 5000
@@ -34,11 +35,20 @@ async function run() {
     const qpMainCollection = client.db("qpServer").collection('qpmain')
     const userCollection = client.db("qpServer").collection('users')
 
-    app.get('/qpmain',async(req,res)=>{
-      const result=await qpMainCollection.find().toArray()
+    app.get('/qpmain', async (req, res) => {
+      const result = await qpMainCollection.find().toArray()
       res.send(result)
     })
-  //  registration
+// create token
+    app.post('/api/jwt', async (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '1h' });
+      console.log(token);
+      res.send({token});
+
+    });
+    //  registration
     app.post('/api/signup', async (req, res) => {
       const { first_name, last_name, email, phone, password, user_role, gender, day, month, year } = req.body;
       const birthDate = new Date(`${year}-${month}-${day}`);
@@ -52,10 +62,38 @@ async function run() {
         gender,
         birthDate,
       };
-    console.log(newUser);
- 
+      console.log(newUser);
+
       const result = await userCollection.insertOne(newUser);
       res.send(result)
+    });
+
+    // login page
+    app.post('/api/login', async (req, res) => {
+      const { email, password } = req.body;
+
+      try {
+        // Find the user by email
+        const user = await userCollection.findOne({ email });
+
+        if (!user) {
+          return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        // Check the password
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+          return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        // Create JWT token
+        // const token = jwt.sign({ userId: user._id }, jwtSecret, { expiresIn: '1h' });
+
+        res.send.json(user);
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to log in' });
+      }
     });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
