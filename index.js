@@ -48,6 +48,22 @@ async function run() {
       res.send({token});
 
     });
+      // middlewares
+      const verifyToken = (req, res, next) => {
+        console.log('inside', req.headers.authorization)
+        if (!req.headers.authorization) {
+          return res.status(401).send({ message: 'forbidden access' })
+        }
+        const token = req.headers.authorization.split(' ')[1]
+  
+        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+          if (err) {
+            return res.status(401).send({ message: 'forbidden access' })
+          }
+          req.decoded = decoded
+          next()
+        })
+      }
     //  registration
     app.post('/api/signup', async (req, res) => {
       const { first_name, last_name, email, phone, password, user_role, gender, day, month, year } = req.body;
@@ -68,33 +84,7 @@ async function run() {
       res.send(result)
     });
 
-    // login page
-    app.post('/api/login', async (req, res) => {
-      const { email, password } = req.body;
-
-      try {
-        // Find the user by email
-        const user = await userCollection.findOne({ email });
-
-        if (!user) {
-          return res.status(401).json({ error: 'Invalid email or password' });
-        }
-
-        // Check the password
-        const isMatch = await bcrypt.compare(password, user.password);
-
-        if (!isMatch) {
-          return res.status(401).json({ error: 'Invalid email or password' });
-        }
-
-        // Create JWT token
-        // const token = jwt.sign({ userId: user._id }, jwtSecret, { expiresIn: '1h' });
-
-        res.send.json(user);
-      } catch (error) {
-        res.status(500).json({ error: 'Failed to log in' });
-      }
-    });
+   
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
