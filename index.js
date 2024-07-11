@@ -2,7 +2,7 @@ const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
 var jwt = require('jsonwebtoken');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.Port || 5000
 
@@ -50,22 +50,7 @@ async function run() {
       res.send({token});
 
     });
-      // middlewares
-      const verifyToken = (req, res, next) => {
-        console.log('inside', req.headers.authorization)
-        if (!req.headers.authorization) {
-          return res.status(401).send({ message: 'forbidden access' })
-        }
-        const token = req.headers.authorization.split(' ')[1]
-  
-        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-          if (err) {
-            return res.status(401).send({ message: 'forbidden access' })
-          }
-          req.decoded = decoded
-          next()
-        })
-      }
+
     //  registration
     app.post('/api/signup', async (req, res) => {
       const { first_name, last_name, email, phone, password, user_role, gender, day, month, year } = req.body;
@@ -101,6 +86,7 @@ async function run() {
 
     //get story image 
     app.get('/storyimg', async (req, res) => {
+     
       const result = await storyCollection.find().toArray()
       res.send(result)
     })
@@ -109,6 +95,13 @@ async function run() {
     app.post('/storyimg',async(req,res)=>{
       const story=req.body
       const result=await storyCollection.insertOne(story)
+      res.send(result)
+    })
+    // specific story
+    app.get('/storyimg/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await storyCollection.findOne(query)
       res.send(result)
     })
    
