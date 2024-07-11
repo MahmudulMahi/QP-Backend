@@ -99,7 +99,13 @@ async function run() {
       res.send(result);
     });
 
-    // story image save
+    //get story image 
+    app.get('/storyimg', async (req, res) => {
+      const result = await storyCollection.find().toArray()
+      res.send(result)
+    })
+
+    //post story image 
     app.post('/storyimg',async(req,res)=>{
       const story=req.body
       const result=await storyCollection.insertOne(story)
